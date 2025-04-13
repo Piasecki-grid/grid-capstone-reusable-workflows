@@ -23,7 +23,7 @@ on:
             AZURE_CLIENT_SECRET:
                 required: true
                 description: "AZURE_CLIENT_SECRET"
-            GITHUB_TOKEN:
+            YOUR_GITHUB_TOKEN:
                 required: true
                 description: "GITHUB_TOKEN"
             K8S_GITHUB_TOKEN:
@@ -121,9 +121,9 @@ jobs:
 
       - name: Docker Build and push
         run: |
-          az acr login --name ${{ vars.ACR_NAME }}
-          docker build -t ${{ vars.ACR_NAME }}.azurecr.io/grid-capstone:${{ vars.GITHUB_SHA }} .
-          docker push ${{ vars.ACR_NAME }}.azurecr.io/grid-capstone:${{ vars.GITHUB_SHA }}
+          az acr login --name ${{ inputs.ACR_NAME }}
+          docker build -t ${{ inputs.ACR_NAME }}.azurecr.io/grid-capstone:${{ inputs.GITHUB_SHA }} .
+          docker push ${{ inputs.ACR_NAME }}.azurecr.io/grid-capstone:${{ inputs.GITHUB_SHA }}
 
   deploy:
     needs: [docker]
@@ -132,7 +132,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.YOUR_GITHUB_TOKEN }}
           
       - name: Automatic deployment
         run: |
@@ -143,7 +143,7 @@ jobs:
           cd cicd
           git clone https://x-access-token:${{ secrets.K8S_GITHUB_TOKEN }}@github.com/Piasecki-grid/grid-capstone-k8s-manifests.git
           cd grid-capstone-k8s-manifests
-          sed -i 's|${{ vars.ACR_NAME }}.azurecr.io/grid-capstone:[0-9a-f]\{40\}|${{ vars.ACR_NAME }}.azurecr.io/grid-capstone:${{ vars.GITHUB_SHA }}|g' deployment.yml
+          sed -i 's|${{ inputs.ACR_NAME }}.azurecr.io/grid-capstone:[0-9a-f]\{40\}|${{ inputs.ACR_NAME }}.azurecr.io/grid-capstone:${{ inputs.GITHUB_SHA }}|g' deployment.yml
           git add .
           git commit -m "Kubernetes manifests file update: $(date)"
           git push
